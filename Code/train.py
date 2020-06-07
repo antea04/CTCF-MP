@@ -16,7 +16,7 @@ from sklearn.cross_validation import cross_val_score,StratifiedKFold,train_test_
 
 import xgboost as xgb
 from sklearn.externals import joblib
-	
+
 def analyzeResult(data,model,DataVecs):
 	predict = model.predict(DataVecs)
 	data['predict'] = predict
@@ -26,13 +26,13 @@ def analyzeResult(data,model,DataVecs):
 	data['label'][data['label'] != 1] = 0
 
 	print ("Accuracy: %.4f %%" % (100. * sum(data["label"] == data["predict"]) / len(data["label"])))
-	
+
 	answer1 = data[data["label"] == 1]
 	answer2 = data[data["label"] != 1]
-	
+
 	print ("Positive Accuracy: %.4f %%" % (100. * sum(answer1["label"] == answer1["predict"]) / len(answer1["label"])))
 	print ("Negative Accuracy: %.4f %%" % (100. * sum(answer2["label"] == answer2["predict"]) / len(answer2["label"])))
-	
+
 	try:
 		result_auc = model.predict_proba(DataVecs)[:,1]
 		print ("Roc:%.4f\nAUPR:%.4f\n" % (roc_auc_score(data["label"],result_auc),
@@ -99,7 +99,7 @@ def setWeight(data):
 	for i in xrange(5):
 		a = data[data["label"] == i]
 		if len(a) != 0:
-			data["weight"][a.index] = length/float(len(a))		
+			data["weight"][a.index] = length/float(len(a))
 	return data
 
 def balance_data_dist(data,dataDataVecs):
@@ -165,15 +165,15 @@ def balance_data_dist(data,dataDataVecs):
 	print len(positive)
 	print len(negative)
 	dataDataVecs = dataDataVecs[np.array(data["index_back"],dtype = 'int')]
-	
+
 	data.index = xrange(len(data))
 	posdata = data[data["label"] == 1]
 	negdata = data[data["label"] != 1]
-	
+
 	if len(posdata) > len(negdata):
 		posdata = data[data["label"] != 1]
 		negdata = data[data["label"] == 1]
-	
+
 	posdatavecs = dataDataVecs[posdata.index]
 	negdatavecs = dataDataVecs[negdata.index]
 	np.random.seed(0)
@@ -185,7 +185,7 @@ def balance_data_dist(data,dataDataVecs):
 	dataDataVecs = np.vstack((posdatavecs,negdatavecs))
 	data.index = xrange(len(data))
 	data["weight"] = 1
-	
+
 	return data,dataDataVecs
 
 def getLabelData(cell,direction):
@@ -197,10 +197,10 @@ def getLabelData(cell,direction):
 
 	for i in xrange(5):
 		a = data[data["label"] == i]
-		
+
 		if len(a) != 0:
 			data["weight"][a.index] = length/float(len(a))
-		
+
 		print "Label %d : %d\n" %(i,len(a))
 
 	print len(data)
@@ -218,7 +218,7 @@ def getDataVecs(data):
 	for feature in motif_feature_list:
 		list1.append("C1_"+feature)
 		list1.append("C2_"+feature)
-	
+
 	dataDataVecs = data[list1]
 	header = list(dataDataVecs.columns.values)
 	print header
@@ -236,10 +236,12 @@ def run(word, num_features,cell,direction):
 	resultlabel = np.zeros((1),dtype = "float32")
 	resultindex = np.zeros((1),dtype="int")
 	global importance_sum
-		
+
 	data = getLabelData(cell,direction)
-	
+
 	dataDataVecs = np.load("../Temp/%s/%s/datavecs.npy" %(cell,direction))
+	print "DataVecs"
+	print dataDataVecs
 	data = setWeight(data)
 	print np.max(data['weight'])
 	print np.min(data['weight'])
@@ -259,13 +261,16 @@ def run(word, num_features,cell,direction):
 	forest = xgb.XGBClassifier(max_depth=12,learning_rate=0.01, n_estimators = 500,nthread=30)
 
 	fold_num = 10
-	
+
 	cv = StratifiedKFold(y = label, n_folds = fold_num, shuffle = True, random_state = 0)
-	
+
 	scores= cross_val_score(forest, dataDataVecs, label,\
 							scoring = score_func, cv = cv,\
 	 						n_jobs = 1,fit_params={'sample_weight': weight})
-	
+
+	print "Final scores"
+	print scores
+
 	print
 	print "Accuracy:%.4f %%\nPositive Accuracy:%.4f %%\nNegative Accuracy:%.4f %%\n\nPrecision:%.4f\nRecall:%.4f\nF1:%.4f\nMCC:%.4f\n\nAUC:%.4f\nAUPR:%.4f\n " \
 	%(accuracy*fold_num,pos*fold_num,neg*fold_num,precision/fold_num,recall/fold_num,f1/fold_num,mcc/fold_num,auc/fold_num,aupr/fold_num)
