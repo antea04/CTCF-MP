@@ -7,6 +7,7 @@ import math
 import random
 import processSeq
 import warnings
+from datetime import datetime
 
 from sklearn import preprocessing
 import sklearn.preprocessing
@@ -242,19 +243,21 @@ def run(word, num_features,cell,direction):
 	dataDataVecs = np.load("../Temp/%s/%s/datavecs.npy" %(cell,direction))
 	print "DataVecs"
 	print dataDataVecs
+
 	data = setWeight(data)
 	print np.max(data['weight'])
 	print np.min(data['weight'])
 	extra,header = getDataVecs(data)
 	print extra[4,:]
-
+	print "Features of data"
+	print header
 
 	dataDataVecs = np.concatenate((extra,dataDataVecs),axis = 1)
 
 	scalar = sklearn.preprocessing.StandardScaler()
 	dataDataVecs = scalar.fit_transform(dataDataVecs)
 	print dataDataVecs.shape
-	
+
 	label = np.asarray(data["label"])
 	weight = np.asarray(data["weight"])
 
@@ -274,3 +277,6 @@ def run(word, num_features,cell,direction):
 	print
 	print "Accuracy:%.4f %%\nPositive Accuracy:%.4f %%\nNegative Accuracy:%.4f %%\n\nPrecision:%.4f\nRecall:%.4f\nF1:%.4f\nMCC:%.4f\n\nAUC:%.4f\nAUPR:%.4f\n " \
 	%(accuracy*fold_num,pos*fold_num,neg*fold_num,precision/fold_num,recall/fold_num,f1/fold_num,mcc/fold_num,auc/fold_num,aupr/fold_num)
+	forest.save_model("../Temp/%s/%s/trained_model_%s" %(cell,direction,str(datetime.now())))
+	prediction = forest.predict(dataDataVecs)
+	np.savetxt("prediction.csv", prediction, delimiter=",")
