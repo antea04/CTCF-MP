@@ -277,6 +277,6 @@ def run(word, num_features,cell,direction):
 	print
 	print "Accuracy:%.4f %%\nPositive Accuracy:%.4f %%\nNegative Accuracy:%.4f %%\n\nPrecision:%.4f\nRecall:%.4f\nF1:%.4f\nMCC:%.4f\n\nAUC:%.4f\nAUPR:%.4f\n " \
 	%(accuracy*fold_num,pos*fold_num,neg*fold_num,precision/fold_num,recall/fold_num,f1/fold_num,mcc/fold_num,auc/fold_num,aupr/fold_num)
-	forest.save_model("../Temp/%s/%s/trained_model_%s" %(cell,direction,str(datetime.now())))
+	forest._Booster.save_model("../Temp/%s/%s/trained_model_%s.model" %(cell,direction,str(datetime.now())))
 	prediction = forest.predict(dataDataVecs)
 	np.savetxt("prediction.csv", prediction, delimiter=",")
