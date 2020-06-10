@@ -73,6 +73,14 @@ def run(word,feature,range,cell,total,direction,use_chipseq):
 
 def main():
 	opts = parse_args()
+	print("Running with following options:")
+	print("word: %s" %(opts.word))
+	print("feature: %s" %(opts.feature))
+	print("range: %s" %(opts.range))
+	print("cell: %s" %(opts.cell))
+	print("total: %s" %(opts.total))
+	print("direction: %s" %(opts.direction))
+	print("Use ChIP-seq: %s" %(opts.chipseq))
 	run(opts.word,opts.feature,opts.range,opts.cell,opts.total,opts.direction, opts.chipseq)
 
 if __name__ == '__main__':
