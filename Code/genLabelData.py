@@ -81,15 +81,15 @@ def balance_data_dist(data):
 	print
 	print len(positive)
 	print len(negative)
-	
+
 	data.index = xrange(len(data))
 	posdata = data[data["label"] == 1]
 	negdata = data[data["label"] != 1]
-	
+
 	if len(posdata) > len(negdata):
 		posdata = data[data["label"] != 1]
 		negdata = data[data["label"] == 1]
-	
+
 	newnegindex = np.random.permutation(negdata.index)
 	newnegindex = newnegindex[0:len(posdata)]
 	negdata = negdata.reindex(newnegindex)
@@ -99,10 +99,10 @@ def balance_data_dist(data):
 	return data
 
 
-def run(cell,direction):
-	Positive_data = pd.read_table("../Temp/%s/CH.csv" %(cell),sep = ",")
+def run(cell_output,direction):
+	Positive_data = pd.read_table("../Temp/%s/CH.csv" %(cell_output),sep = ",")
 
-	Negative_data = pd.read_table("../Temp/%s/%s/Negative.csv" %(cell,direction),sep = ",")
+	Negative_data = pd.read_table("../Temp/%s/%s/Negative.csv" %(cell_output,direction),sep = ",")
 
 
 	if (direction == 'conv') or (direction == 'imb'):
@@ -132,10 +132,10 @@ def run(cell,direction):
 		table = table
 
 
-	table.to_csv("../Temp/%s/%s/LabelData.csv" %(cell,direction),index=False)
+	table.to_csv("../Temp/%s/%s/LabelData.csv" %(cell_output,direction),index=False)
 
-	table = pd.read_table("../Temp/%s/%s/LabelData.csv" %(cell,direction),sep = ",")
-	
+	table = pd.read_table("../Temp/%s/%s/LabelData.csv" %(cell_output,direction),sep = ",")
+
 	print len(table)
 
 	print "Positive : %d Negative : %d\n" %(len(table[table["label"] == 1]),len(table[table["label"] != 1]))

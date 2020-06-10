@@ -32,10 +32,10 @@ def getCTCF2(CTCF,index):
 	head = list(predictors_df.columns.values)
 	return np.asarray(predictors_df),head
 
-def run(cell,direction):
+def run(cell_output, direction):
 	warnings.filterwarnings("ignore")
-	CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell),sep = ",")
-	Positive_data = pd.read_table("../Temp/%s/CH.csv" %(cell),sep = ",")
+	CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell_output),sep = ",")
+	Positive_data = pd.read_table("../Temp/%s/CH.csv" %(cell_output),sep = ",")
 
 	if direction == 'conv':
 		Positive_data = Positive_data[(Positive_data["C1_strand"] != "-") & (Positive_data["C2_strand"] != "+")]
@@ -57,21 +57,21 @@ def run(cell,direction):
 	#a = 0
 	min_range = distance[a]
 	max_range = distance[len(distance)-a - 1]
-	
+
 	print min_range
 	print max_range
-	
+
 	total = len(CTCF)
 	CTCF.index = xrange(total)
-	
+
 	count = 0
-	
+
 	indexlist1=[]
 	indexlist2=[]
 	label = []
 
-	if os.path.isfile("../Temp/%s/%s/neg_index.csv" %(cell,direction)):
-		index = pd.read_table("../Temp/%s/%s/neg_index.csv" %(cell,direction),sep = ",")
+	if os.path.isfile("../Temp/%s/%s/neg_index.csv" %(cell_output,direction)):
+		index = pd.read_table("../Temp/%s/%s/neg_index.csv" %(cell_output,direction),sep = ",")
 		indexlist1 = index["index1"]
 		indexlist2 = index["index2"]
 		label = index["label"]
@@ -110,20 +110,20 @@ def run(cell,direction):
 	label = label.reshape((len(label),1))
 	a,head1 =  getCTCF1(CTCF,indexlist1)
 	b,head2 = getCTCF2(CTCF,indexlist2)
-	
+
 	arrays = np.concatenate((label,a,b,np.abs(indexlist2-indexlist1).reshape((len(label),1))),axis = 1)
 	header = gethead(head1,head2)
 	header.append("num_between")
 	table= pd.DataFrame(arrays,columns=header)
-	table.to_csv("../Temp/%s/%s/Negative.csv" %(cell,direction), index = False)
+	table.to_csv("../Temp/%s/%s/Negative.csv" %(cell_output,direction), index = False)
 
 	indexlist1 = indexlist1.reshape((len(indexlist1),1))
 	indexlist2 = indexlist2.reshape((len(indexlist2),1))
 	indexs = np.concatenate((label,indexlist1,indexlist2),axis = 1)
 	indexs = pd.DataFrame(indexs,columns=['label','index1','index2'])
-	indexs.to_csv("../Temp/%s/%s/neg_index.csv" %(cell,direction), index = False)
-	
-	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell),index = False)
+	indexs.to_csv("../Temp/%s/%s/neg_index.csv" %(cell_output,direction), index = False)
+
+	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell_output),index = False)
 
 if __name__ == "__main__":
 	run()

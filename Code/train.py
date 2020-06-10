@@ -189,8 +189,8 @@ def balance_data_dist(data,dataDataVecs):
 
 	return data,dataDataVecs
 
-def getLabelData(cell,direction):
-	data = pd.read_table('../Temp/%s/%s/LabelData_select.csv' %(cell,direction),sep = ",")
+def getLabelData(cell_output,direction):
+	data = pd.read_table('../Temp/%s/%s/LabelData_select.csv' %(cell_output,direction),sep = ",")
 	data["weight"] = 1
 
 	data["distance"] = data["C2_start"] - data["C1_start"]
@@ -225,7 +225,7 @@ def getDataVecs(data):
 	print header
 	return np.asarray(dataDataVecs),header
 
-def run(word, num_features,cell,direction):
+def run(word, num_features,cell_output,direction):
 
 	warnings.filterwarnings("ignore")
 
@@ -238,9 +238,9 @@ def run(word, num_features,cell,direction):
 	resultindex = np.zeros((1),dtype="int")
 	global importance_sum
 
-	data = getLabelData(cell,direction)
+	data = getLabelData(cell_output,direction)
 
-	dataDataVecs = np.load("../Temp/%s/%s/datavecs.npy" %(cell,direction))
+	dataDataVecs = np.load("../Temp/%s/%s/datavecs.npy" %(cell_output,direction))
 	print "DataVecs"
 	print dataDataVecs
 
@@ -277,6 +277,6 @@ def run(word, num_features,cell,direction):
 	print
 	print "Accuracy:%.4f %%\nPositive Accuracy:%.4f %%\nNegative Accuracy:%.4f %%\n\nPrecision:%.4f\nRecall:%.4f\nF1:%.4f\nMCC:%.4f\n\nAUC:%.4f\nAUPR:%.4f\n " \
 	%(accuracy*fold_num,pos*fold_num,neg*fold_num,precision/fold_num,recall/fold_num,f1/fold_num,mcc/fold_num,auc/fold_num,aupr/fold_num)
-	forest._Booster.save_model("../Temp/%s/%s/trained_model_%s.model" %(cell,direction,str(datetime.now())))
+	#forest._Booster.save_model("../Temp/%s/%s/trained_model_%s.model" %(cell,direction,str(datetime.now())))
 	prediction = forest.predict(dataDataVecs)
-	np.savetxt("prediction.csv", prediction, delimiter=",")
+	np.savetxt("../Temp/%s/%s/prediction.csv" %(cell_output, direction), prediction, delimiter=",")

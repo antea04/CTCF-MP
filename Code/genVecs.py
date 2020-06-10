@@ -17,7 +17,7 @@ from gensim import corpora, models, similarities
 def getkmervec(DNAdata1,DNAdata2,kmerdict):
 	counter = 0
 	DNAFeatureVecs = np.zeros((len(DNAdata1),2*len(kmerdict.keys())), dtype="float32")
-	
+
 	for DNA in DNAdata1:
 		if counter % 1000 == 0:
 			print "DNA %d of %d\r" % (counter, len(DNAdata1)),
@@ -27,7 +27,7 @@ def getkmervec(DNAdata1,DNAdata2,kmerdict):
 			DNAFeatureVecs[counter][kmerdict[word]] += 1
 		counter += 1
 	print
-	
+
 	counter = 0
 	for DNA in DNAdata2:
 		if counter % 1000 == 0:
@@ -48,7 +48,7 @@ def genkmerdict(k):
 		temp_result = []
 		for word in result:
 			if len(word) != i:
-				print word 
+				print word
 				print len(word),i
 				continue
 			else:
@@ -60,14 +60,14 @@ def genkmerdict(k):
 
 	count = 0
 	for word in result:
-		dict1[word] = count 
+		dict1[word] = count
 		count += 1
 
 	return dict1
 
-def Unsupervised(Range,word,cell):
-	unlabelfile = open("../Temp/%s/Unsupervised" %(cell),"w")
-	CTCF = pd.read_table("../Data/%s/fimo2.csv" %(cell),sep = ",")
+def Unsupervised(Range,word,cell_input):
+	unlabelfile = open("../Temp/%s/Unsupervised" %(cell_input),"w")
+	CTCF = pd.read_table("../Data/%s/fimo2.csv" %(cell_input),sep = ",")
 
 	list = ["chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", \
 			"chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", \
@@ -105,13 +105,13 @@ def Unsupervised(Range,word,cell):
 		unlabelfile.write(sentence+"\n")
 	print
 
-def gen_Seq(Range,cell,direction):
+def gen_Seq(Range,cell_output,direction):
 	print "Generating Seq..."
-	table = pd.read_table("../Temp/%s/%s/LabelData.csv" %(cell,direction), sep=',')
+	table = pd.read_table("../Temp/%s/%s/LabelData.csv" %(cell_output,direction), sep=',')
 	print len(table)
 	table.drop_duplicates()
 	print len(table)
-	label_file = open("../Temp/%s/%s/LabelSeq" %(cell,direction), "w")
+	label_file = open("../Temp/%s/%s/LabelSeq" %(cell_output,direction), "w")
 
 	label_file.write("label\t"
 				  "seq1\t"
@@ -135,7 +135,7 @@ def gen_Seq(Range,cell,direction):
 	cgm = np.zeros((total),dtype="float32")
 	chr_length = np.zeros((total),dtype = "int64")
 	for i in xrange(total):
-		
+
 		if (number_positive % 100 == 0) and (number_positive != 0):
 			print "number of seq: %d of %d\r" %(number_positive,total),
 			sys.stdout.flush()
@@ -156,12 +156,12 @@ def gen_Seq(Range,cell,direction):
 		motif2 = table["C2_motif"][i]
 		strand1 = table["C1_strand"][i]
 		strand2 = table["C2_strand"][i]
-		
+
 		edstrs1 = strs[start1 : end1]
 		edstrs2 = strs[start2 : end2]
 		edstrs3 = strs[end1 : start2]
 
-		
+
 		chr_length[number_positive] = len(strs)
 
 		if strand1 == "-":
@@ -169,11 +169,11 @@ def gen_Seq(Range,cell,direction):
 			edstrs1 = processSeq.get_reverse_str(edstrs1)
 		if strand2 == "-":
 			edstrs2 = edstrs2[::-1]
-			edstrs2 = processSeq.get_reverse_str(edstrs2) 
+			edstrs2 = processSeq.get_reverse_str(edstrs2)
 		cgm[number_positive] = processSeq.countCG(edstrs3)
 		cg1[number_positive] = processSeq.countCG(edstrs1)
 		cg2[number_positive] = processSeq.countCG(edstrs2)
-		
+
 		if "N" in edstrs1 or "N" in edstrs2:
 			table = table.drop(i)
 			continue
@@ -186,13 +186,13 @@ def gen_Seq(Range,cell,direction):
 	table["CG2"] = cg2[:number_positive]
 	table["CGM"] = cgm[:number_positive]
 	print len(table)
-	table.to_csv("../Temp/%s/%s/LabelData_select.csv" %(cell,direction),index=False)
+	table.to_csv("../Temp/%s/%s/LabelData_select.csv" %(cell_output,direction),index=False)
 
 #load word2vec model or train a new one
-def getWord_model(word,num_features,min_count,cell):
+def getWord_model(word,num_features,min_count,cell_input):
 	word_model = ""
 	if not os.path.isfile("../Temp/model"):
-		sentence = LineSentence("../Temp/%s/Unsupervised" %(cell),max_sentence_length = 15000)
+		sentence = LineSentence("../Temp/%s/Unsupervised" %(cell_input),max_sentence_length = 15000)
 		print "Start Training Word2Vec model..."
 		# Set values for various parameters
 		num_features = int(num_features)	  # Word vector dimensionality
@@ -244,10 +244,10 @@ def getDNA_split(DNAdata,word):
 	print
 	return DNAlist1,DNAlist2
 
-def getAvgFeatureVecs(DNAdata1,DNAdata2,model,num_features, word,cell,direction):
+def getAvgFeatureVecs(DNAdata1,DNAdata2,model,num_features, word):
 	counter = 0
 	DNAFeatureVecs = np.zeros((len(DNAdata1),2*num_features), dtype="float32")
-	
+
 	for DNA in DNAdata1:
 		if counter % 1000 == 0:
 			print "DNA %d of %d\r" % (counter, len(DNAdata1)),
@@ -256,7 +256,7 @@ def getAvgFeatureVecs(DNAdata1,DNAdata2,model,num_features, word,cell,direction)
 		DNAFeatureVecs[counter][0:num_features] = np.mean(model[DNA],axis = 0)
 		counter += 1
 	print
-	
+
 	counter = 0
 	for DNA in DNAdata2:
 		if counter % 1000 == 0:
@@ -268,7 +268,7 @@ def getAvgFeatureVecs(DNAdata1,DNAdata2,model,num_features, word,cell,direction)
 
 	return DNAFeatureVecs
 
-def run(word, num_features,cell,direction):
+def run(word, num_features,cell_input,cell_output,direction):
 	warnings.filterwarnings("ignore")
 
 	global word_model,data
@@ -278,24 +278,24 @@ def run(word, num_features,cell,direction):
 	word_model=""
 	min_count=10
 
-	word_model = getWord_model(word,num_features,min_count,cell)
+	word_model = getWord_model(word,num_features,min_count,cell_input)
 
 	# Read data
-	data = pd.read_table('../Temp/%s/%s/LabelSeq' %(cell,direction),sep = "\t")
+	data = pd.read_table('../Temp/%s/%s/LabelSeq' %(cell_output,direction),sep = "\t")
 	print "Generating Training and Testing Vector"
-	
-	
+
+
 	datawords1,datawords2 = getDNA_split(data,word)
-	dataDataVecs = getAvgFeatureVecs(datawords1,datawords2,word_model,num_features,word,cell,direction)
+	dataDataVecs = getAvgFeatureVecs(datawords1,datawords2,word_model,num_features,word)
 
 	print dataDataVecs.shape
-	np.save("../Temp/%s/%s/datavecs.npy" %(cell,direction),dataDataVecs)
-	
+	np.save("../Temp/%s/%s/datavecs.npy" %(cell_output,direction),dataDataVecs)
+
 	'''
 	dict1 = genkmerdict(6)
 	datawords1,datawords2 = getDNA_split(data,6)
 	dataDataVecs = getkmervec(datawords1,datawords2,dict1)
-	np.save("../Temp/%s/%s/kmervecs.npy" %(cell,direction),dataDataVecs)
+	np.save("../Temp/%s/%s/kmervecs.npy" %(cell_output,direction),dataDataVecs)
 	'''
 
 if __name__ == "__main__":

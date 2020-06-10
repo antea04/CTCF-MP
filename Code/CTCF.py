@@ -10,8 +10,8 @@ chrom_list = ["chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "c
 
 threshold = 0
 
-def CTCF_ChIP(cell,ChIP_name,select = False):
-	peak = pd.read_table("../Data/%s/%s.bed" %(cell,ChIP_name),sep = "\t",header = None)
+def CTCF_ChIP(cell_input, cell_output, ChIP_name, select = False):
+	peak = pd.read_table("../Data/%s/%s.bed" %(cell_input,ChIP_name),sep = "\t",header = None)
 	if np.asarray(peak).shape[1] == 10:
 		peak.columns = ['chromosome','start','end','name','score','strand','signalValue','pValue','qValue','summit']
 
@@ -25,9 +25,9 @@ def CTCF_ChIP(cell,ChIP_name,select = False):
 	peak["new_end"] = np.max((peak["point"] + threshold,peak["end"]),axis = 0)
 
 	try:
-		CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell),sep = ",")
+		CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell_output),sep = ",")
 	except:
-		CTCF = pd.read_table("../Data/%s/fimo.csv" %(cell),sep = ",")
+		CTCF = pd.read_table("../Data/%s/fimo.csv" %(cell_input),sep = ",")
 		CTCF = CTCF.sort_values(by=['chromosome','start'])
 		CTCF["active"] = 0
 
@@ -66,8 +66,9 @@ def CTCF_ChIP(cell,ChIP_name,select = False):
 	if select:
 		CTCF["active"] = ((CTCF["active"] + CTCF[ChIP_name]))
 		print np.sum(CTCF["active"] > 0)
-	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell),index=False)
+	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell_output),index=False)
 
+#Probably deprecated and replaced by geninteraction_new
 def CTCF_CH(cell):
 	loop = pd.read_table("../Data/%s/loop_from_Ch.csv" %(cell),sep = ",")
 
@@ -113,12 +114,12 @@ def CTCF_CH(cell):
 	print np.sum(CTCF["active"])
 	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell),index=False)
 
-def CTCF_Age(cell):
-	CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell), sep = ",")
+def CTCF_Age(cell_input, cell_output):
+	CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell_output), sep = ",")
 	#CTCF = CTCF[CTCF["active"] == 1]
 	CTCF.index = xrange(len(CTCF))
 	CTCF["age"] = 0
-	Age = pd.read_table("../Data/%s/CTCF_age2" %(cell),sep = "\t")
+	Age = pd.read_table("../Data/%s/CTCF_age2" %(cell_input),sep = "\t")
 
 	total = len(CTCF)
 
@@ -158,35 +159,44 @@ def CTCF_Age(cell):
 	print "can't map: %d\n" %(nomap)
 
 
-	CTCF["pos_index"] = 0 
+	CTCF["pos_index"] = 0
 	CTCF["neg_index"] = 0
 	CTCF["pos_index"][CTCF["strand"] == "+"] = 1
 	CTCF["neg_index"][CTCF["strand"] == "-"] = 1
 	CTCF["pos_index"] = np.cumsum(CTCF["pos_index"])
 	CTCF["neg_index"]  =np.cumsum(CTCF["neg_index"])
 
-	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell),index = False)
+	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell_output),index = False)
 
 def parse_args():
 	parser = OptionParser(usage="CTCF Interaction Prediction", add_help_option=False)
-	parser.add_option("-c","--cell",default = 'GM')
-	
+	parser.add_option("-c","--cell",default = 'gm12878')
+	parser.add_option("-p","--chipseq",default = True)
+
 	(opts, args) = parser.parse_args()
 	return opts
 
-def run(cell):
-	
-	for CTCF in ['CTCF_peak']:
-		CTCF_ChIP(cell,CTCF,True)
-	
+def run(cell_input, cell_output, use_chipseq=True):
+	if use_chipseq:
+		for CTCF in ['CTCF_peak']:
+			CTCF_ChIP(cell_input,cell_output,CTCF,True)
+
+
 	for ChIP in ["DNase_Duke"]:
-		CTCF_ChIP(cell,ChIP)
-	
-	CTCF_Age(cell)
-	
+		CTCF_ChIP(cell_input,cell_output,ChIP)
+
+	CTCF_Age(cell_input, cell_output)
+
 def main():
 	opts = parse_args()
-	run(opts.cell)
+
+	cell_input = cell
+	if opts.chipseq:
+		cell_output = "%s_%s" %(cell, "allData")
+	else:
+		cell_output = "%s_%s" %(cell, "noChIP")
+		
+	run(cell_input, cell_output, opts.chipseq)
 
 
 

@@ -1,6 +1,6 @@
 #encoding:utf-8
 import pandas as pd
-import numpy as np 
+import numpy as np
 import warnings
 import sys
 import os
@@ -15,11 +15,11 @@ def getcases(loop,i,CTCF,origin_CTCF):
 		end = loop["end1"][i]+ threshold
 
 		cases1 = CTCF[(CTCF["chromosome"] == chromosome) & (CTCF["start"] >= start - 18) & (CTCF["end"] <= end + 18)]
-	
+
 		if len(cases1) != 0:
 			origin_CTCF["used"][cases1.index] = 1
 		threshold +=50
-	
+
 	threshold = 0
 	cases2 = ""
 	while (len(cases2) == 0) and (threshold <= 10):
@@ -29,11 +29,11 @@ def getcases(loop,i,CTCF,origin_CTCF):
 		end = loop["end2"][i]+ threshold
 
 		cases2 = CTCF[(CTCF["chromosome"] == chromosome) & (CTCF["start"] >= start - 18) & (CTCF["end"] <= end + 18)]
-		
+
 		if len(cases2) != 0:
 			origin_CTCF["used"][cases2.index] = 1
 		threshold +=50
-		
+
 
 	return cases1,cases2
 
@@ -67,10 +67,10 @@ def getCTCF2(CTCF,index):
 	head = list(predictors_df.columns.values)
 	return np.asarray(predictors_df),head
 
-def run(cell):
+def run(cell_input, cell_output):
 	warnings.filterwarnings("ignore")
-	loop = pd.read_table("../Data/%s/loop_from_Ch.csv" %(cell),sep = ",")
-	CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell),sep = ",")
+	loop = pd.read_table("../Data/%s/loop_from_Ch.csv" %(cell_input),sep = ",")
+	CTCF = pd.read_table("../Temp/%s/CTCF.csv" %(cell_output),sep = ",")
 
 	total = len(loop)
 	loop = loop[loop["chromosome1"] == loop["chromosome2"]]
@@ -83,8 +83,8 @@ def run(cell):
 	label = []
 
 
-	if os.path.isfile("../Temp/%s/pos_index.csv" %(cell)):
-		index = pd.read_table("../Temp/%s/pos_index.csv" %(cell),sep = ",")
+	if os.path.isfile("../Temp/%s/pos_index.csv" %(cell_output)):
+		index = pd.read_table("../Temp/%s/pos_index.csv" %(cell_output),sep = ",")
 		indexlist1 = index["index1"]
 		indexlist2 = index["index2"]
 		label = index["label"]
@@ -105,7 +105,7 @@ def run(cell):
 					print "Mapping: %d of %d\r" %(count,len(loop)),
 					sys.stdout.flush()
 				count += 1
-
+				#TODO: understand what is happening here
 				cases1,cases2 = getcases(temp_loop,i,temp_CTCF,CTCF)
 				length1,length2 = len(cases1),len(cases2)
 
@@ -133,13 +133,13 @@ def run(cell):
 
 		print
 		print "unmappable: %d  no upside: %d no downside : %d positive: %d potential: %d inter: %d\n" %(unmap,upside,downside,pos,unlab,inter)
-	
+
 	indexlist1 = np.asarray(indexlist1)
 	indexlist2 = np.asarray(indexlist2)
-	
+
 	label = np.asarray(label)
 	label = label.reshape((len(label),1))
-	
+
 	a,head1 =  getCTCF1(CTCF,indexlist1)
 	b,head2 = getCTCF2(CTCF,indexlist2)
 
@@ -147,15 +147,16 @@ def run(cell):
 	indexlist2 = indexlist2.reshape((len(indexlist2),1))
 	indexs = np.concatenate((label,indexlist1,indexlist2),axis = 1)
 	indexs = pd.DataFrame(indexs,columns=['label','index1','index2'])
-	indexs.to_csv("../Temp/%s/pos_index.csv" %(cell), index = False)
+	indexs.to_csv("../Temp/%s/pos_index.csv" %(cell_output), index = False)
 	arrays = np.concatenate((label,a,b,np.abs(indexlist2-indexlist1)),axis = 1)
 	header = gethead(head1,head2)
 	header.append('num_between')
 	table= pd.DataFrame(arrays,columns=header)
-	table.to_csv("../Temp/%s/CH.csv" %(cell),index = False)
+	table.to_csv("../Temp/%s/CH.csv" %(cell_output),index = False)
 
-	
-	loop.to_csv("../Data/%s/loop_from_Ch.csv" %(cell),index = False)
-	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell),index = False)
-if __name__ == "__main__":
-	run('gm12878')
+
+	loop.to_csv("../Data/%s/loop_from_Ch.csv" %(cell_input),index = False)
+	CTCF.to_csv("../Temp/%s/CTCF.csv" %(cell_output),index = False)
+
+#if __name__ == "__main__":
+#	run('gm12878')
